@@ -52,15 +52,6 @@ class Polyline:
         self.points.append(Vec2d(coord[0], coord[1]))
         self.speeds.append(speed)
 
-    # def append_curve(self):
-    #     """функция добавления кривой"""
-    #     if len(self.all_points[-1]) > 2:
-    #         self.all_points.append([])
-    #         self.points = self.all_points[-1]
-    #
-    #         self.all_speeds.append([])
-    #         self.speeds = self.all_speeds[-1]
-
     def delete(self):
         self.points.pop()
         self.speeds.pop()
@@ -163,30 +154,42 @@ class SpeedRedact:
         self.__max_speed = max_speed
         self.speeds = speeds or []
 
-    def increase(self, booster=1.1):
+    @staticmethod
+    def activation(value):
+        return abs(1/math.tanh(value))
+
+    def increase(self):
         """ Increasing the speed of points. """
         for i in range(len(self.speeds)):
-            self.speeds[i] = self.speeds[i][0] * booster, self.speeds[i][1] * booster
+            value = self.speeds[i]
+            print(value)
+            self.speeds[i] = value[0] * self.activation(value[0]), value[1] * self.activation(value[1])
 
-    def decrease(self, brake=1.1):
+    def decrease(self):
         """ Decreasing the speed of points. """
         for i in range(len(self.speeds)):
-            self.speeds[i] = self.speeds[i][0] / brake, self.speeds[i][1] / brake
+            value = self.speeds[i]
+            self.speeds[i] = value[0] / self.activation(value[0]), value[1] / self.activation(value[1])
 
 
 # =======================================================================================
 # Класс для добавления кривых
 # =======================================================================================
-class Curves(Polyline, SpeedRedact):
+class Curves(Polyline):
     """ Managing curves. """
     def __init__(self, curves=None):
         Polyline.__init__(self)
-        SpeedRedact.__init__(self)
         self.__curves = curves or []
 
-    def increase(self, booster=1.1):
+    def increase(self):
         for polyline in self.__curves:
-            pass
+            speed_redact = SpeedRedact(polyline.speeds)
+            speed_redact.increase()
+
+    def decrease(self):
+        for polyline in self.__curves:
+            speed_redact = SpeedRedact(polyline.speeds)
+            speed_redact.decrease()
 
     def clear(self):
         """ Deleting all curves. """
