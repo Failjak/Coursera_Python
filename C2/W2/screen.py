@@ -7,7 +7,7 @@ import math
 
 
 # =======================================================================================
-# Класс для работы с векторами
+# A class for working with vectors
 # =======================================================================================
 
 class Vec2d:
@@ -16,31 +16,35 @@ class Vec2d:
         self.y = y
 
     def __sub__(self, vec):
-        """"возвращает разность двух векторов"""
+        """" The return difference of two vectors. """
         return Vec2d(self.x - vec.x, self.y - vec.y)
 
     def __add__(self, vec):
-        """возвращает сумму двух векторов"""
+        """ The returns sum of two vectors"""
         return Vec2d(self.x + vec.x, self.y + vec.y)
 
     def __len__(self):
-        """возвращает длину вектора"""
+        """ The returns vector lenght. """
         return Vec2d(math.sqrt(self.x ** 2 + self.y ** 2))
 
     def __mul__(self, k):
-        """возвращает произведение вектора на число"""
+        """ The returns product of a vector by a number. """
         return Vec2d(self.x * k, self.y * k)
 
     def int_pair(self):
-        """возвращает пару координат, определяющих вектор (координаты точки конца вектора),
-        координаты начальной точки вектора совпадают с началом системы координат (0, 0)"""
+        """
+        The returns coordinates defining the vector (coordinates of the end point of the vector).
+
+        Coordinates start points of the vector match with start coordinate system point (0, 0)
+        """
         return self.x, self.y
 
 
 # =======================================================================================
-# Класс замкнутых линий
+# Class closed line
 # =======================================================================================
 class Polyline:
+    """ Managing polyline. """
     SCREEN_DIM = (800, 600)
 
     def __init__(self, points=None, speeds=None):
@@ -48,33 +52,33 @@ class Polyline:
         self.speeds = speeds or []
 
     def append(self, coord, speed):
-        """функуия добавления точки"""
+        """ Adding a point."""
         self.points.append(Vec2d(coord[0], coord[1]))
         self.speeds.append(speed)
 
     def delete(self):
+        """ Deleting a point."""
         self.points.pop()
         self.speeds.pop()
 
     def set_points(self):
-        """функция перерасчета координат опорных точек"""
+        """ Recalculation of reference point. """
         for i, point in enumerate(self.points):
             point.x = point.x + self.speeds[i][0]
             point.y = point.y + self.speeds[i][1]
 
-            if point.x > SCREEN_DIM[0] or point.x < 0:
+            if point.x > Polyline.SCREEN_DIM[0] or point.x < 0:
                 self.speeds[i] = (-self.speeds[i][0], self.speeds[i][1])
-            if point.y > SCREEN_DIM[1] or point.y < 0:
+            if point.y > Polyline.SCREEN_DIM[1] or point.y < 0:
                 self.speeds[i] = (self.speeds[i][0], -self.speeds[i][1])
 
     def draw_points(self, style="points", width=3, color=(255, 255, 255)):
-        """функция отрисовки точек на экране"""
+        """ Drawing points on the screen. """
         if style == "line":
             for p_n in range(-1, len(self.points) - 1):
                 pygame.draw.line(gameDisplay, color,
                                  (int(self.points[p_n].x), int(self.points[p_n].y)),
                                  (int(self.points[p_n + 1].x), int(self.points[p_n + 1].y)), width)
-
         elif style == "points":
             for p in self.points:
                 pygame.draw.circle(gameDisplay, color,
@@ -82,7 +86,7 @@ class Polyline:
 
 
 def draw_help():
-    """функция отрисовки экрана справки программы"""
+    """ Drawing the help to the program. """
     gameDisplay.fill((50, 50, 50))
     font1 = pygame.font.SysFont("courier", 24)
     font2 = pygame.font.SysFont("serif", 24)
@@ -109,9 +113,10 @@ def draw_help():
 
 
 # =======================================================================================
-# Класс Knot
+# Class Knot
 # =======================================================================================
 class Knot(Polyline):
+    """"""
     def __init__(self, points=None, count=0):
         super().__init__()
         self.points = points or []
@@ -146,7 +151,7 @@ class Knot(Polyline):
 
 
 # =======================================================================================
-# Класс управления скоростью
+# Speed control class
 # =======================================================================================
 class SpeedRedact:
     """ Class for editing the speed of points. """
@@ -162,7 +167,6 @@ class SpeedRedact:
         """ Increasing the speed of points. """
         for i in range(len(self.speeds)):
             value = self.speeds[i]
-            print(value)
             self.speeds[i] = value[0] * self.activation(value[0]), value[1] * self.activation(value[1])
 
     def decrease(self):
@@ -173,7 +177,7 @@ class SpeedRedact:
 
 
 # =======================================================================================
-# Класс для добавления кривых
+# Class for adding curves
 # =======================================================================================
 class Curves(Polyline):
     """ Managing curves. """
@@ -182,11 +186,13 @@ class Curves(Polyline):
         self.__curves = curves or []
 
     def increase(self):
+        """ Increasing the speed for all curves. """
         for polyline in self.__curves:
             speed_redact = SpeedRedact(polyline.speeds)
             speed_redact.increase()
 
     def decrease(self):
+        """ Decreasing the speed for all curves. """
         for polyline in self.__curves:
             speed_redact = SpeedRedact(polyline.speeds)
             speed_redact.decrease()
@@ -203,6 +209,7 @@ class Curves(Polyline):
         return self.__curves[-1]
 
     def delete(self):
+        """ Deleting curves. """
         if len(self.__curves) != 1:
             self.__curves[-1].delete()
             if len(self.__curves[-1].points) == 0:
@@ -212,6 +219,7 @@ class Curves(Polyline):
             self.__curves[0].delete()
 
     def draw_curves(self, style="points", width=3, color=(255, 255, 255)):
+        """ Drawing curves. """
         for polyline in self.__curves:
             if style == "points":
                 polyline.draw_points()
@@ -227,13 +235,11 @@ class Curves(Polyline):
 
 
 # =======================================================================================
-# Основная программа
+# Main program
 # =======================================================================================
-SCREEN_DIM = (800, 600)
-
 if __name__ == "__main__":
     pygame.init()
-    gameDisplay = pygame.display.set_mode(SCREEN_DIM)
+    gameDisplay = pygame.display.set_mode(Polyline.SCREEN_DIM)
     pygame.display.set_caption("MyScreenSaver")
 
     polyline = Polyline()
